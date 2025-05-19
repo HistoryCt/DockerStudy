@@ -1,0 +1,22 @@
+FROM ubuntu:20.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV ROOT_PASSWORD=root
+
+# 安装 openssh-server、nginx、supervisor
+RUN apt-get update && \
+    apt-get install -y openssh-server nginx supervisor && \
+    mkdir -p /var/run/sshd /var/log/supervisor
+
+# 设置 root 密码（支持环境变量）
+RUN echo "root:${ROOT_PASSWORD}" | chpasswd
+
+# 配置 sshd 允许 root 登录
+RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
+
+# supervisor 配置
+COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
+EXPOSE 22 80 3389
+
+CMD ["/usr/bin/supervisord", "-n"]

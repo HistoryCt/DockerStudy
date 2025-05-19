@@ -1,0 +1,23 @@
+# debian10
+FROM debian:buster
+ENV DEBIAN_FRONTEND=noninteractive
+
+# 安装 openssh-server、rinetd、supervisor
+RUN apt-get update && \
+    apt-get install -y openssh-server rinetd supervisor && \
+    mkdir -p /var/run/sshd /var/log/supervisor
+
+# 添加 supervisord 配置
+COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
+# 添加 rinetd 配置（可根据需要挂载或COPY）
+COPY rinetd.conf /etc/rinetd.conf
+
+# 设置 root 密码（通过环境变量 ROOT_PASSWORD 传递）
+COPY set_root_pw.sh /set_root_pw.sh
+RUN chmod +x /set_root_pw.sh
+
+EXPOSE 22 3389
+
+# 启动前设置 root 密码
+CMD ["/bin/bash", "-c", "/set_root_pw.sh && /usr/bin/supervisord"]
