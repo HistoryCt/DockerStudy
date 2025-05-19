@@ -1,0 +1,20 @@
+FROM alpine:latest
+
+# 安装 openssh 和 bash
+RUN apk add --no-cache openssh bash
+
+# 允许 root 通过 ssh 登录
+RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
+
+# 设置 root 密码，支持通过环境变量传递
+ENV ROOT_PASSWORD=root
+RUN echo "root:${ROOT_PASSWORD}" | chpasswd
+
+# 创建 sshd 运行所需目录
+RUN mkdir -p /run/sshd
+
+# 开放 22 端口
+EXPOSE 22 3389 80
+
+# 启动 sshd 服务
+CMD ["/usr/sbin/sshd", "-D"]
